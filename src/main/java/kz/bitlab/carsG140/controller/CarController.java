@@ -10,13 +10,19 @@ import kz.bitlab.carsG140.repository.CategoryRepository;
 import kz.bitlab.carsG140.repository.CountryRepository;
 import kz.bitlab.carsG140.specification.CarSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Controller
 @RequestMapping("/cars")
@@ -33,33 +39,32 @@ public class CarController {
                       @RequestParam(name = "max_price", required = false) Integer maxPrice,
                       @RequestParam(name = "category_id", required = false) Long categoryId,
                       @RequestParam(name = "countryId", required = false) Long countryId,
+                      @PageableDefault(size = 10, sort = "name", direction = Sort.Direction.ASC)
+                          Pageable pageable,
+                      @RequestParam(value = "sort_by", required = false, defaultValue = "price") String sortBy,
+                      @RequestParam(value = "sort_order", required = false, defaultValue = "ASC") String sortOrder,
                       Model model
     ) {
-//        List<Car> cars = carRepository.findAll();
-//        cars = cars.stream()
-//                .filter(e -> e.getYear() > 2010)
-//                .toList();
 
-        //Specification
-        //Predicate=
+        Sort sort = Sort.by(sortOrder.equals("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
+//        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sort);
+        Specification<Car> specification = CarSpecification.getCarSpecification(name, minYear, maxPrice, countryId, categoryId);
+        Page<Car> carsPage = carRepository.findAll(specification, pageable);
 
-//        if (name != null && minYear != null && maxPrice != null) {
-//            // Если в URL-запросе присутствует параметр year, передаем представлению список машин, у которых год производства соответствует значению параметра year
-//            cars = carRepository.findAllByNameAndYearGreaterThanAndPriceLessThan(name, minYear, maxPrice);
-//        } else if (name != null && minYear != null) {
-//            cars = carRepository.findAllByNameAndYearGreaterThan(name, minYear);
-//        } else if (name != null && maxPrice != null) {
-//            cars = carRepository.findAllByNameAndPriceLessThan(name, maxPrice);
-//        } else {
-//            // Если в URL-запросе отсутствует параметр year, передаем представлению список всех машин
-//            cars = carRepository.findAll();
-//        }
-        List<Car> cars = carRepository.findAll(CarSpecification.getCarSpecification(name, minYear, maxPrice, countryId, categoryId));
-//        List<Car> cars = carRepository.findAllBySomeParam(name, minYear, maxPrice);
+        List<Car> cars = carsPage.getContent();
+        //количество
+        //в какой странице ты
 
         model.addAttribute("cars", cars);
         model.addAttribute("countries", countryRepository.findAll());
         model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("currentPage", carsPage.getNumber());
+        model.addAttribute("totalPages", carsPage.getTotalPages());
+        List<Integer> pages = IntStream.range(0, carsPage.getTotalPages()).boxed().toList();   // [0, 1, 2, …, N-1]
+        model.addAttribute("pageNumbers", pages);
+        model.addAttribute("sortOrder", sortOrder);
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("pageSize", carsPage.getTotalPages());
         return "cars";
     }
 

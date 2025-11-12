@@ -2,6 +2,41 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main.html}">
 <div layout:fragment="mainFragment">
+
+  <div class="card px-3 py-3 my-3 ms-2 w-50">
+
+    <h4>Sort cars:</h4>
+
+    <form method="get" class="d-flex" th:action="@{'/cars'}">
+
+      <!-- Выбор параметра сущности (машины), по которому будет осуществляться сортировка -->
+      <div class="form-floating me-3">
+        <select class="form-select" id="sort_by" aria-label="sort_by" name="sort_by">
+          <option value="name" th:selected="${sortBy.equals('name')}">Name</option>
+          <option value="year" th:selected="${sortBy.equals('year')}">Year</option>
+          <option value="price" th:selected="${sortBy.equals('price')}">Price</option>
+        </select>
+        <label for="sort_by">Sort by:</label>
+      </div>
+
+      <!-- Выбор порядка сортировки: по возрастанию или по убыванию -->
+      <div class="form-floating me-3">
+        <select class="form-select" id="sort_order" aria-label="sort_order" name="sort_order">
+          <option value="ASC" th:selected="${sortOrder.equals('ASC')}">Ascending</option>
+          <option value="DESC" th:selected="${sortOrder.equals('DESC')}">Descending</option>
+        </select>
+        <label for="sort_order">Order:</label>
+      </div>
+
+      <!-- Через это поле можно задать размер страницы -->
+      <div class="form-floating me-3">
+        <input type="text" class="form-control" id="size" name="size" placeholder="size" th:value="${param.size}">
+        <label for="size">Page size:</label>
+      </div>
+      <button type="submit" class="btn btn-success" style="height: 43.5pt;"><i class="bi bi-check"></i></button>
+    </form>
+  </div>
+
   <div class="card px-3 py-3 my-3 ms-2">
 
     <h4>Find cars by:</h4>
@@ -77,5 +112,35 @@
       </tbody>
     </table>
   </div>
+
+  <nav aria-label="Pagination navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+
+      <!-- Переход на предыдущую страницу -->
+      <!-- Будет заблокирована возможность перейти на предыдущую страницу, если открыта первая страница. (Не забываем о том, что нумерация страниц начинается с нуля) -->
+      <li th:class="${currentPage == 0 ? 'page-item disabled' : 'page-item'}">
+        <!-- Данная ссылка (кнопка) будет загружать предыдущую страницу -->
+        <a class="page-link" th:href="@{'/cars?page=' + ${currentPage - 1} + '&size=' + ${pageSize}}" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+
+      <!-- Горизонтальный список всех страниц -->
+      <li th:each="pageNumber : ${pageNumbers}" class="page-item">
+        <!-- Будет загружена та страница, на номер которой Вы нажмете -->
+        <!-- Текущая страница будет выделена -->
+        <a th:class="${pageNumber == currentPage ? 'page-link active' : 'page-link'}" th:href="@{'/cars?page=' + ${pageNumber} + '&size=' + ${pageSize}}" th:text="${pageNumber + 1}"></a>
+      </li>
+
+      <!-- Переход на следующую страницу -->
+      <!-- Будет заблокирована возможность перейти на следующую страницу, если открыта последняя страница. (Последняя страница имеет номер N-1) -->
+      <li th:class="${currentPage == totalPages - 1 ? 'page-item disabled' : 'page-item'}">
+        <!-- Данная ссылка (кнопка) будет загружать следующую страницу -->
+        <a class="page-link" th:href="@{'/cars?page=' + ${currentPage + 1} + '&size=' + ${pageSize}}" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
 </div>
 </html>
