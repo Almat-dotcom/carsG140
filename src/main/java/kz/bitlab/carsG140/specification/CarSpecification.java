@@ -13,7 +13,7 @@ import java.util.List;
 
 @UtilityClass
 public class CarSpecification {
-    public static Specification<Car>    getCarSpecification(String name, Integer minYear, Integer maxPrice,Long countryId, Long categoryId){
+    public static Specification<Car>  getCarSpecification(String name, Integer minYear, Integer maxPrice,Long countryId, Long categoryId){
         Specification<Car> specification = (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (name != null && !name.isEmpty()) {
